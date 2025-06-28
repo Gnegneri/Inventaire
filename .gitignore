@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Fichier .gitignore pour Flutter
+.build/
+.dart_tool/
+.packages
+.pub/
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+.melbourne/
+*.iml
+*.log
+
