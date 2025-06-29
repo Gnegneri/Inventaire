@@ -15,16 +15,16 @@ class AdminPage extends StatelessWidget {
         backgroundColor: Colors.green,
         centerTitle: true,
         leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: Image.asset(
-              'assets/log.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
+  padding: const EdgeInsets.all(4.0), // Moins de padding pour laisser plus de place
+  child: SizedBox(
+    width: 60, // ← augmenté
+    height: 60, // ← augmenté
+    child: Image.asset(
+      'assets/logo.png',
+      fit: BoxFit.contain,
+    ),
+  ),
+),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

@@ -28,7 +28,7 @@ class MainApp extends StatelessWidget {
       // 2e option : utiliser un système de routes
       initialRoute: '/',
       routes: {
-        '/': (context) => const LoginForm(),
+        '/': (context) => const LoginPage(),
         '/magasinier': (context) => const MagasinierPage(),
         '/admin': (context) => const AdminPage(),
       },
