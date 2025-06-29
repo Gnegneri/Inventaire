@@ -1,6 +1,8 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, avoid_print
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,62 +25,95 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController matriculeController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  bool _isLoading = false;
+
+Future<bool> isServerAvailable() async {
+  const url = 'http://192.168.1.170/inventaire/ping.php';
+  try {
+    final response = await http
+        .head(Uri.parse(url))                       // HEAD suffit
+        .timeout(const Duration(seconds: 5));
+
+    // Considérez toutes les réponses 2xx ou 3xx comme « serveur UP »
+    return response.statusCode >= 200 &&
+           response.statusCode < 400;
+  } on SocketException {
+    // Adresse injoignable (Wi‑Fi coupé, IP fausse…)
+    return false;
+  } on TimeoutException {
+    return false;
+  } catch (_) {
+    return false;
+  }
+}
+
+  
+
+Future<void> showMessage(String titre, String message) async {
+  return showDialog<void>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(titre),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Fermer'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Future<void> _loginUser() async {
-    final String matricule = matriculeController.text.trim();
-    final String motDePasse = passwordController.text.trim();
+  final String matricule = matriculeController.text.trim();
+  final String motDePasse = passwordController.text.trim();
 
-    if (matricule.isEmpty || motDePasse.isEmpty) {
-      _showSnack('Veuillez remplir tous les champs');
+
+  if (matricule.isEmpty || motDePasse.isEmpty) {
+    await showMessage('Erreur', 'Veuillez remplir tous les champs');
+    return;
+  }
+
+
+try {
+
+final url = Uri.parse('http://192.168.1.170/inventaire/login.php');
+    final response = await http
+        .post(url, body: {'matricule': matricule, 'Mot_pass': motDePasse})
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode != 200) {
+      await showMessage('Erreur', 'Le serveur répond, mais renvoie ${response.statusCode}.');
       return;
     }
 
-    setState(() => _isLoading = true);
+    final data = jsonDecode(response.body);
 
-    try {
-      final url = Uri.parse('http://192.168.1.170/inventaire/login.php'); // ← adapte l'URL
-      final response = await http.post(url, body: {
-        'matricule': matricule,
-        'Mot_pass': motDePasse,
-      });
+      if (data['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('matricule', data['matricule']);
+        await prefs.setString('Nm_Pr', data['Nm_Pr']);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['success'] == true) {
-  // ✔️ Sauvegarde des infos
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('matricule', data['matricule']);
-  await prefs.setString('Nm_Pr', data['Nm_Pr']);
-
-  // ✔️ Redirection selon le rôle
-  if (data['Fonction'] == 'admin') {
-    Navigator.pushReplacementNamed(context, '/admin');
-  } else if (data['Fonction'] == 'magasinier') {
-    Navigator.pushReplacementNamed(context, '/magasinier');
-  }else {
-            _showSnack('Rôle inconnu : ${data['Fonction']}');
-          }
+        if (data['Fonction'] == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin');
+        } else if (data['Fonction'] == 'magasinier') {
+          Navigator.pushReplacementNamed(context, '/magasinier');
         } else {
-          _showSnack(data['message'] ?? 'Identifiants invalides');
+          await showMessage('Erreur', 'Rôle inconnu : ${data['Fonction']}');
         }
       } else {
-        _showSnack('Erreur serveur : ${response.statusCode}');
+        await showMessage('Erreur', data['message'] ?? 'Identifiants invalides');
       }
-    } catch (e) {
-      _showSnack('Erreur réseau : $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+  catch (e) {
+    await showMessage('Erreur', 'Erreur réseau : $e');
   }
-
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,16 +182,14 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _loginUser,
+                        onPressed:  _loginUser,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator()
-                            : Text('Se connecter',
+                        child: Text('Se connecter',
                                 style: GoogleFonts.montserrat(
                             color: Colors.white,
                             fontSize: 16,

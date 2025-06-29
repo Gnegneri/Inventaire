@@ -94,28 +94,44 @@ class _MagasinierPageState extends State<MagasinierPage> {
     );
   }
 
+  Future<void> _logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear(); // Efface toutes les données locales si besoin
+  if (mounted) {
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false); // ou remplace '/' par '/login' selon ton routage
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
-        centerTitle: true,
-        title: Text(
-          'Magasinier',
-          style: GoogleFonts.montserrat(color: Colors.white),
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: SizedBox(
-            width: 60,
-            height: 60,
-            child: Image.asset(
-              'assets/logo.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
+  backgroundColor: Colors.green,
+  centerTitle: true,
+  title: Text(
+    'Magasinier',
+    style: GoogleFonts.montserrat(color: Colors.white),
+  ),
+  leading: Padding(
+    padding: const EdgeInsets.all(4.0),
+    child: SizedBox(
+      width: 60,
+      height: 60,
+      child: Image.asset(
+        'assets/logo.png',
+        fit: BoxFit.contain,
       ),
+    ),
+  ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.logout),
+      tooltip: 'Déconnexion',
+      color: Colors.white,
+      onPressed: _logout,
+    ),
+  ],
+),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -131,12 +147,12 @@ class _MagasinierPageState extends State<MagasinierPage> {
                       children: [
                         Text(
                           'Matricule : $matricule',
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                         const SizedBox(width: 20),
                         Text(
                           'Nom : $nom',
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                       ],
                     ),
@@ -186,10 +202,16 @@ class _MagasinierPageState extends State<MagasinierPage> {
                                   color: Colors.green, size: 30),
                               tooltip: 'Ajouter un champ de comptage',
                               onPressed: () {
-                                setState(() {
-                                  comptageControllers.add(TextEditingController());
-                                });
-                              },
+  if (comptageControllers.length < 2) {
+    setState(() {
+      comptageControllers.add(TextEditingController());
+    });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Nombre maximum de champs atteint')),
+    );
+  }
+},
                             ),
                           ],
                         ),
@@ -200,16 +222,15 @@ class _MagasinierPageState extends State<MagasinierPage> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          debugPrint('Matricule : \$matricule');
-                          debugPrint('Nom : \$nom');
-                          debugPrint('Code Article : \${codesuiteController.text}');
-                          debugPrint('Référence : \${referenceController.text}');
-                          debugPrint('Désignation : \${designationController.text}');
-                          debugPrint('Emplacement : \${emplacementController.text}');
+                          debugPrint('Matricule : $matricule');
+                          debugPrint('Nom : $nom');
+                          debugPrint('Code Article : ${codesuiteController.text}');
+                          debugPrint('Référence : ${referenceController.text}');
+                          debugPrint('Désignation : ${designationController.text}');
+                          debugPrint('Emplacement : ${emplacementController.text}');
                           for (int i = 0; i < comptageControllers.length; i++) {
-                            debugPrint('Comptage \${i + 1} : \${comptageControllers[i].text}');
+                            debugPrint('Comptage ${i + 1} : ${comptageControllers[i].text}');
                           }
-                          // TODO: envoyer les données au backend
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
