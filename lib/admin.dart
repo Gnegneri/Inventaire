@@ -51,7 +51,6 @@ class AdminPage extends StatelessWidget {
                       label: 'Insérer le stock',
                       icon: Icons.add_box,
                       onPressed: () {
-                        // TODO: Naviguer vers la page d’insertion
                       },
                     ),
                     const SizedBox(height: 20),
@@ -60,7 +59,6 @@ class AdminPage extends StatelessWidget {
                       label: 'Extraire le stock',
                       icon: Icons.download,
                       onPressed: () {
-                        // TODO: Naviguer vers la page d’export ou d’affichage
                       },
                     ),
                     const SizedBox(height: 20),
@@ -69,7 +67,6 @@ class AdminPage extends StatelessWidget {
                       label: 'Ajouter un utilisateur',
                       icon: Icons.person_add,
                       onPressed: () {
-                        // TODO: Naviguer vers la page de création utilisateur
                       },
                     ),
                   ],

@@ -1,6 +1,10 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart'; // <-- À ajouter tout en haut
+
 
 class MagasinierPage extends StatefulWidget {
   const MagasinierPage({super.key});
@@ -15,13 +19,17 @@ class _MagasinierPageState extends State<MagasinierPage> {
   final TextEditingController referenceController = TextEditingController();
   final TextEditingController designationController = TextEditingController();
   final TextEditingController emplacementController = TextEditingController();
+   final TextEditingController matriculeController = TextEditingController();
 
   // Identité du magasinier
   String matricule = '';
   String nom = '';
+  String mag = '';
 
   // Liste dynamique des contrôleurs de comptage
   List<TextEditingController> comptageControllers = [TextEditingController()];
+
+
 
   @override
   void initState() {
@@ -29,11 +37,14 @@ class _MagasinierPageState extends State<MagasinierPage> {
     _loadMagasinierInfo();
   }
 
+
+
   Future<void> _loadMagasinierInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       matricule = prefs.getString('matricule') ?? 'Inconnu';
       nom = prefs.getString('Nm_Pr') ?? 'Inconnu';
+      mag = prefs.getString('Id_mag1') ?? 'Inconnu';
     });
   }
 
@@ -94,17 +105,21 @@ class _MagasinierPageState extends State<MagasinierPage> {
     );
   }
 
-  Future<void> _logout() async {
+ Future<void> _logout() async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.clear(); // Efface toutes les données locales si besoin
-  if (mounted) {
-    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false); // ou remplace '/' par '/login' selon ton routage
-  }
+  await prefs.clear();
+  debugPrint("Déconnecté avec succès");
+  Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
 }
 
+
+
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+  return WillPopScope(
+    onWillPop: () async => false, // ← bloque le bouton retour
+    child: Scaffold(
       appBar: AppBar(
   backgroundColor: Colors.green,
   centerTitle: true,
@@ -142,20 +157,73 @@ class _MagasinierPageState extends State<MagasinierPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Matricule : $matricule',
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.green),
-                        ),
-                        const SizedBox(width: 20),
-                        Text(
-                          'Nom : $nom',
-                          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, color: Colors.green),
-                        ),
-                      ],
-                    ),
+                    Card(
+  elevation: 4,
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  color: Colors.green[50],
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.badge, color: Colors.green),
+            const SizedBox(width: 8),
+           TextField(
+  controller: matriculeController,
+  inputFormatters: [LowerCaseTextFormatter()], // <-- Ajout ici
+  decoration: InputDecoration(
+    labelText: 'Matricule',
+    hintText: 'Ex : m12345',
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+    prefixIcon: const Icon(Icons.person),
+  ),
+),
+
+            Text(
+              matricule,
+              style: GoogleFonts.montserrat(color: Colors.green[800]),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.person, color: Colors.green),
+            const SizedBox(width: 8),
+            Text(
+              'Nom : ',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              nom,
+              style: GoogleFonts.montserrat(color: Colors.green[800]),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.store, color: Colors.green),
+            const SizedBox(width: 8),
+            Text(
+              'Magasin : ',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              mag,
+              style: GoogleFonts.montserrat(color: Colors.green[800]),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+),
+
                     const SizedBox(height: 20),
                     Text(
                       'Saisie d\'article',
@@ -222,15 +290,6 @@ class _MagasinierPageState extends State<MagasinierPage> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          debugPrint('Matricule : $matricule');
-                          debugPrint('Nom : $nom');
-                          debugPrint('Code Article : ${codesuiteController.text}');
-                          debugPrint('Référence : ${referenceController.text}');
-                          debugPrint('Désignation : ${designationController.text}');
-                          debugPrint('Emplacement : ${emplacementController.text}');
-                          for (int i = 0; i < comptageControllers.length; i++) {
-                            debugPrint('Comptage ${i + 1} : ${comptageControllers[i].text}');
-                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
@@ -254,6 +313,19 @@ class _MagasinierPageState extends State<MagasinierPage> {
           );
         },
       ),
+    ),);
+  }
+  
+}
+class LowerCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(
+      text: newValue.text.toLowerCase(),
+      selection: newValue.selection,
     );
   }
 }
