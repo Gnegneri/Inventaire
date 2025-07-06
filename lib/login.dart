@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,6 +16,20 @@ class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
+
+class LowerCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(
+      text: newValue.text.toLowerCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController matriculeController = TextEditingController();
@@ -56,9 +71,11 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      final url = Uri.parse('http://192.168.1.170/inventaire/login.php');
+      final url = Uri.parse('http://172.16.5.123/inventaire/login.php');
       final response = await http
-          .post(url, body: {
+          .post(url, 
+          headers: {'Accept': 'application/json'},
+          body: {
             'matricule': matricule,
             'Mot_pass': motDePasse,
           })
@@ -80,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('role', result['Fonction']);// <- pour la SplashScreen
+        await prefs.setString('Fonction', result['Fonction']);// <- pour la SplashScreen
         await prefs.setString('matricule', result['matricule']);
         await prefs.setString('Nm_Pr', result['Nm_Pr']);
         await prefs.setString('Id_mag1', result['Id_mag1']);
@@ -142,20 +159,19 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.green[800],
                         )),
                     const SizedBox(height: 30),
-
                     TextField(
-                      controller: matriculeController,
-                      decoration: InputDecoration(
-                        labelText: 'Matricule',
-                        hintText: 'Ex : M12345',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.person),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
+  controller: matriculeController,
+  inputFormatters: [LowerCaseTextFormatter()], // <-- Ajout ici
+  decoration: InputDecoration(
+    labelText: 'Matricule',
+    hintText: 'Ex : m12345',
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+    prefixIcon: const Icon(Icons.person),
+  ),
+),
+const SizedBox(height: 30),
                     TextField(
                       controller: passwordController,
                       obscureText: true,

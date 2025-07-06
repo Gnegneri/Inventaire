@@ -20,7 +20,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.green,
-        textTheme: GoogleFonts.montserratTextTheme(),
+        textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
       ),
       initialRoute: '/splash',
       routes: {

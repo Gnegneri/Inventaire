@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2)); // animation simple
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-    final role = prefs.getString('role');
+    final role = prefs.getString('Fonction');
 
     if (isLoggedIn && role != null) {
       if (role == 'admin') {
